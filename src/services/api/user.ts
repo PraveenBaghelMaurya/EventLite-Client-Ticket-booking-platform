@@ -12,9 +12,6 @@ export const signIn = async (formData: SignInForm): Promise<ApiResponse> => {
         const response = await axiosInstance.post('/user/sign-in', formData, {
             withCredentials: true // Important for cookies if using httpOnly tokens
         });
-
-        
-
         return response.data
     } catch (error: any) {
         return error.response?.data

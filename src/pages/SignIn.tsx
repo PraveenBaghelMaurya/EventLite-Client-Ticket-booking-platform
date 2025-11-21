@@ -34,7 +34,7 @@ const SignInPage: React.FC = () => {
         }
 
         toast.success(response.message || "Signed in successfully");
-        navigate("/userDashboard");
+        navigate("/events");
       } else {
         toast.error(response?.message || "Failed to sign in");
       }
