@@ -3,12 +3,20 @@ import { Link, useNavigate } from "react-router-dom";
 import type { SignInForm } from "../services/types/user";
 import { signIn, googleSignIn } from "../services/api/user";
 import { toast } from "react-hot-toast";
+import { useAppDispatch, useAppSelector } from "../utils/hools";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { ErrorMessage } from "../components/common/ErrorMessage";
+import type { ErrorResponse } from "../services/types/apiResponse";
 
 const SignInPage: React.FC = () => {
   const [formData, setFormData] = useState<SignInForm>({
     email: "",
     password: "",
   });
+
+  // Redux state - LOCAL STATE KI ZAROORAT NAHI HAI
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector((state) => state.signIn);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,21 +29,53 @@ const SignInPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await signIn(formData);
-      if (response && response.success) {
-        localStorage.setItem("user", JSON.stringify(response.data));
 
-        if (response.data.accessToken) {
-          localStorage.setItem("accessToken", response.data.accessToken);
-        }
-        if (response.data.refreshToken) {
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        }
+    const result = await dispatch(signIn(formData));
 
-        toast.success(response.message || "Signed in successfully");
+    if (signIn.fulfilled.match(result)) {
+      const { success, data, message } = result.payload;
+
+      if (success) {
+        // Store data in localStorage
+        localStorage.setItem("user", JSON.stringify(data));
+        if (data.accessToken)
+          localStorage.setItem("accessToken", data.accessToken);
+        if (data.refreshToken)
+          localStorage.setItem("refreshToken", data.refreshToken);
+
+        // Show success & redirect
+        toast.success(message || "Signed in successfully");
         navigate("/events");
       } else {
+        toast.error(message || "Failed to sign in");
+      }
+    } else {
+      // ERROR CASE
+      const errorPayload = result.payload as ErrorResponse | undefined;
+      const errorMessage =
+        errorPayload?.message || "An error occurred during sign in";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      console.log("🟡 1. Starting Google sign in...");
+      const response = await googleSignIn();
+      console.log("🟢 2. Google sign in response:", response);
+
+      if (response && response.success) {
+        console.log("Redirect URL:", response.redirectUrl);
+
+        // ✅ Show toast first
+        toast.success("Redirecting to Google...");
+
+        // ✅ Redirect after a short delay to show the toast
+        setTimeout(() => {
+          window.location.replace(response.redirectUrl);
+        }, 1000);
+      } else {
+        console.log("🔴 3. Google sign in failed:", response);
         toast.error(response?.message || "Failed to sign in");
       }
     } catch (error: any) {
@@ -44,37 +84,19 @@ const SignInPage: React.FC = () => {
     }
   };
 
-const handleGoogleSignIn = async () => {
-  try {
-    console.log("🟡 1. Starting Google sign in...");
-    const response = await googleSignIn();
-    console.log("🟢 2. Google sign in response:", response);
-    
-    if (response && response.success) {
-      console.log("Redirect URL:", response.redirectUrl);
-      
-      // ✅ Show toast first
-      toast.success("Redirecting to Google...");
-      
-      // ✅ Redirect after a short delay to show the toast
-      setTimeout(() => {
-        window.location.replace(response.redirectUrl);
-      }, 1000);
-      
-    } else {
-      console.log("🔴 3. Google sign in failed:", response);
-      toast.error(response?.message || "Failed to sign in");
-    }
-  } catch (error: any) {
-    console.error("Sign in error:", error);
-    toast.error(error?.message || "An error occurred during sign in");
-  }
-};
-
   const handleForgotPassword = () => {
     console.log("Forgot password clicked");
     // Handle forgot password logic here
   };
+
+  // ✅ Agar loading ho to spinner show karo, BUT COMPLETE PAGE NAHI
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Signing you in..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -98,6 +120,13 @@ const handleGoogleSignIn = async () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* ✅ ERROR MESSAGE - Agar error hai to show karo */}
+          {error && (
+            <div className="mb-6">
+              <ErrorMessage message={error} type="error" />
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
@@ -176,9 +205,10 @@ const handleGoogleSignIn = async () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={loading} // ✅ Loading state disable the button
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                Sign in
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
@@ -199,7 +229,6 @@ const handleGoogleSignIn = async () => {
             {/* Social SignIn Buttons */}
             <div className="mt-6 grid grid-cols-1 gap-3">
               {/* Google SignIn */}
-
               <button
                 type="button"
                 onClick={handleGoogleSignIn}

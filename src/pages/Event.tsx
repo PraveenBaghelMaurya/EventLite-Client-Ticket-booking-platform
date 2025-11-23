@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Users, MapPin, Eye, ArrowRight, Ticket } from 'lucide-react';
+import { useAppSelector } from '../utils/hools';
+import type{User} from '../services/types/user'
 
 // Types
 
@@ -24,13 +26,13 @@ interface Event {
   };
 }
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  isLoggedIn: boolean;
-}
+// interface User {
+//   id: string;
+//   name: string;
+//   email: string;
+//   role: string;
+//   isLoggedIn: boolean;
+// }
 
 // Mock data - Replace with actual API calls
 const mockEvents: Event[] = [
@@ -110,6 +112,7 @@ const mockEvents: Event[] = [
 
 const EventCard: React.FC<{ event: Event; index: number }> = ({ event, index }) => {
   const navigate = useNavigate();
+  const { user, loading } = useAppSelector((state) => state.signIn);
   
   const handleBookTicket = () => {
     navigate(`/events/${event.id}`);
@@ -264,7 +267,7 @@ const EventsPage: React.FC = () => {
       id: '1',
       name: 'John Doe',
       email: 'john@example.com',
-      role: 'user',
+      role: 'USER',
       isLoggedIn: true
     };
     setUser(mockUser);

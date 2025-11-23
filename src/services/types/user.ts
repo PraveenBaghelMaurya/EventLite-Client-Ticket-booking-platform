@@ -9,7 +9,7 @@ export interface SignupForm {
   email: string;
   phone: string;
   password: string;
-  role?: 'USER' | 'ADMIN';
+  role?: 'USER' | 'ADMIN' | 'ORGANIZER';
   avatar?: string;
 }
 
@@ -18,10 +18,11 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'USER' | 'ADMIN';
+  role: 'USER' | 'ADMIN' | 'ORGANIZER';
   avatar?: string;
   createdAt: string;
   updatedAt: string;
+  isLoggedIn: boolean;
 }
 
 export interface AuthResponse {
