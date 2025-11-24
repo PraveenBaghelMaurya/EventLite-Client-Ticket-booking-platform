@@ -1,11 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { signIn } from '../../services/api/user'
 import type { ErrorPayload } from '../../services/types/apiResponse'
+import type { User } from '../../services/types/user';
 
 export const SignInSlice = createSlice({
     name: 'SignInSlice',
     initialState: {
-        user: null as any,
+        user: null as User | null,
         loading: false,
         error: null as string | null,
     },
@@ -19,6 +20,7 @@ export const SignInSlice = createSlice({
             .addCase(signIn.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action.payload;
+                console.log("✅ signIn.fulfilled payload:", action.payload);
                 state.error = null;
             })
             .addCase(signIn.rejected, (state, action) => {

@@ -3,15 +3,25 @@ import { createSlice } from '@reduxjs/toolkit';
 import { filterEvents } from '../../services/api/event';
 import type { Pagination } from '../../services/types/apiResponse';
 import type { ErrorPayload } from '../../services/types/apiResponse';
+import type { Event } from '../../services/types/event';
+
+interface EventState {
+  events: Event[];
+  pagination: Pagination | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: EventState = {
+  events: [],
+  pagination: null,
+  loading: false,
+  error: null,
+};
 
 export const eventSlice = createSlice({
   name: 'eventSlice',
-  initialState: {
-    events: [],
-    pagination: {} as Pagination,
-    loading: false,
-    error: null as string | null,
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
@@ -21,10 +31,10 @@ export const eventSlice = createSlice({
       })
       .addCase(filterEvents.fulfilled, (state, action) => {
         state.loading = false;
-        state.events = action.payload.data.events || action.payload.events || [];
-        if (action.payload.data.pagination) {
-          state.pagination = action.payload.data.pagination;
-        }
+        const events = action.payload?.data?.events || action.payload?.events || [];
+        state.events = events as Event[];
+        const pagination = action.payload?.data?.pagination || action.payload?.pagination || null;
+        state.pagination = pagination;
         state.error = null;
       })
       .addCase(filterEvents.rejected, (state, action) => {

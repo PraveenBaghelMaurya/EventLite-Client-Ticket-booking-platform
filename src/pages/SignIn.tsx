@@ -60,27 +60,22 @@ const SignInPage: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("🟡 1. Starting Google sign in...");
       const response = await googleSignIn();
-      console.log("🟢 2. Google sign in response:", response);
 
       if (response && response.success) {
-        console.log("Redirect URL:", response.redirectUrl);
-
-        // ✅ Show toast first
         toast.success("Redirecting to Google...");
 
-        // ✅ Redirect after a short delay to show the toast
         setTimeout(() => {
           window.location.replace(response.redirectUrl);
         }, 1000);
       } else {
-        console.log("🔴 3. Google sign in failed:", response);
         toast.error(response?.message || "Failed to sign in");
       }
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast.error(error?.message || "An error occurred during sign in");
+    } catch (error: unknown) {
+      toast.error(
+        (error as Error | undefined)?.message ||
+          "An error occurred during sign in"
+      );
     }
   };
 

@@ -8,6 +8,8 @@ export const signIn = createAsyncThunk('auth/signIn', async (formData: SignInFor
     const response = await axiosInstance.post('/user/sign-in', formData, {
       withCredentials: true
     });
+    console.log("🔍 SIGN IN RESPONSE:", response.data);
+    console.log(" ➡️ SIGN IN RESPONSE:", response.data.data);
     return response.data;
   } catch (error: any) {
     return {
