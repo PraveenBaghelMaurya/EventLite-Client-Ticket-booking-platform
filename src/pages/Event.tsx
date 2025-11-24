@@ -261,7 +261,7 @@ const Event: React.FC = () => {
     "Family & Kids"
   ];
 
-  // ✅ Fetch events - FIXED
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
