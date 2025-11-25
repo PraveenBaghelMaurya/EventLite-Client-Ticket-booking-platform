@@ -261,7 +261,6 @@ const Event: React.FC = () => {
     "Family & Kids"
   ];
 
-  
   useEffect(() => {
     const fetchEvents = async () => {
       try {
