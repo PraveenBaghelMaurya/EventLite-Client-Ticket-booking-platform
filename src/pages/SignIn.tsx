@@ -7,6 +7,8 @@ import { useAppDispatch, useAppSelector } from "../utils/hools";
 import { LoadingSpinner } from "../components/common/LoadingSpinner";
 import { ErrorMessage } from "../components/common/ErrorMessage";
 import type { ErrorResponse } from "../services/types/apiResponse";
+import type{tokenPayload} from "../services/types/user"
+import { jwtDecode } from "jwt-decode";
 
 const SignInPage: React.FC = () => {
   const [formData, setFormData] = useState<SignInForm>({
@@ -36,16 +38,30 @@ const SignInPage: React.FC = () => {
       const { success, data, message } = result.payload;
 
       if (success) {
-        // Store data in localStorage
-        localStorage.setItem("user", JSON.stringify(data));
         if (data.accessToken)
           localStorage.setItem("accessToken", data.accessToken);
-        if (data.refreshToken)
-          localStorage.setItem("refreshToken", data.refreshToken);
+        const token  = data.accessToken;
+        const decoded= jwtDecode(token) as tokenPayload;
+        const userName = decoded.name
+      
+      switch(decoded.role ) {
+        case "USER":
+          navigate("/events");
+          break;
+        case "ADMIN":
+          navigate("/admin/dashboard");
+          break;
+        case "ORGANIZER":
+          navigate("/organizer/dashboard");
+          break;
+        case "STAFF":
+          navigate("/staff/dashboard");
+          break;
+        default:
+          navigate("/");
+      }
 
-        // Show success & redirect
-        toast.success(message || "Signed in successfully");
-        navigate("/events");
+        toast.success(`Welcome, ${userName}` );
       } else {
         toast.error(message || "Failed to sign in");
       }

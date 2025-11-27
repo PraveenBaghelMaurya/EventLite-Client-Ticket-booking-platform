@@ -25,3 +25,8 @@ export interface ErrorPayload {
     message: string;
     code?: number;
 }
+
+export interface FailedRequest {
+  resolve: (token: string) => void;
+  reject: (err: any) => void;
+}

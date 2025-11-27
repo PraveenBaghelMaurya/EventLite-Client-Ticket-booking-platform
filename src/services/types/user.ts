@@ -30,3 +30,11 @@ export interface AuthResponse {
   token?: string;
   message?: string;
 }
+
+export interface tokenPayload{
+  id:number;
+  name:string;
+  email:string;
+  role:'ADMIN'|'ORGANIZER'|'STAFF'|'USER';
+
+}

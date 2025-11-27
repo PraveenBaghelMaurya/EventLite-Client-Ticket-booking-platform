@@ -12,13 +12,13 @@ import {
   TrendingUp,
   Clock,
 } from "lucide-react";
-import { useAppSelector, useAppDispatch } from "../utils/hools";
-import { filterEvents } from "../services/api/event";
-import type { User } from "../services/types/user";
-import type { Event as ApiEvent } from "../services/types/event";
+import { useAppSelector, useAppDispatch } from "../../utils/hools";
+import { filterEvents } from "../../services/api/event";
+import type { User } from "../../services/types/user";
+import type { Event as ApiEvent } from "../../services/types/event";
 import { toast } from "react-hot-toast";
-import type{DisplayEvent, EventCardProps, EventCarouselProps} from '../services/types/event'
-import type{EventFilterParams} from '../services/types/event'
+import type{DisplayEvent, EventCardProps, EventCarouselProps} from '../../services/types/event'
+import type{EventFilterParams} from '../../services/types/event'
 
 const EventCard: React.FC<EventCardProps> = ({
   event,

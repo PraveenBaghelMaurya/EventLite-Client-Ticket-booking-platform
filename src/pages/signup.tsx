@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import type { SignupForm } from '../services/types/user';
 import { Link } from 'react-router-dom';
-import { signUp } from '../services/api/user';
+import { signUp, googleSignIn } from '../services/api/user';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { signIn } from '../services/api/user';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -38,9 +37,10 @@ const Signup: React.FC = () => {
 
   const handleGoogleSignup = async(e: React.FormEvent) => {
     e.preventDefault();
-   try {
-      const response = await signIn(formData);
-      if (response && response.success) {
+    try {
+      // Changes: use googleSignIn API response for proper typing.
+      const response = await googleSignIn();
+      if (response?.success && response.data) {
         localStorage.setItem("user", JSON.stringify(response.data));
 
         if (response.data.accessToken) {

@@ -27,6 +27,8 @@ export interface Event {
   shortDescription?: string;
   longDescription?: string;
   venue: string;
+  // Changes: add address to align with EventDetail usage.
+  address?: string;
   street?: string;
   city?: string;
   state?: string;
