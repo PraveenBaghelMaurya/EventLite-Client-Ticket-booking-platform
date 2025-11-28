@@ -40,7 +40,6 @@ const Signup: React.FC = () => {
 //     // Handle Google OAuth here
 //   };
 
-
   const handleFacebookSignup = () => {
     console.log('Signup with Facebook');
     // Handle Facebook OAuth here
