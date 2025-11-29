@@ -3,12 +3,22 @@ import { Link, useNavigate } from "react-router-dom";
 import type { SignInForm } from "../services/types/user";
 import { signIn, googleSignIn } from "../services/api/user";
 import { toast } from "react-hot-toast";
+import { useAppDispatch, useAppSelector } from "../utils/hools";
+import { LoadingSpinner } from "../components/common/LoadingSpinner";
+import { ErrorMessage } from "../components/common/ErrorMessage";
+import type { ErrorResponse } from "../services/types/apiResponse";
+import type{tokenPayload} from "../services/types/user"
+import { jwtDecode } from "jwt-decode";
 
 const SignInPage: React.FC = () => {
   const [formData, setFormData] = useState<SignInForm>({
     email: "",
     password: "",
   });
+
+  // Redux state - LOCAL STATE KI ZAROORAT NAHI HAI
+  const dispatch = useAppDispatch();
+  const { loading, error } = useAppSelector((state) => state.signIn);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,65 +31,83 @@ const SignInPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await signIn(formData);
-      if (response && response.success) {
-        localStorage.setItem("user", JSON.stringify(response.data));
 
-        if (response.data.accessToken) {
-          localStorage.setItem("accessToken", response.data.accessToken);
-        }
-        if (response.data.refreshToken) {
-          localStorage.setItem("refreshToken", response.data.refreshToken);
-        }
+    const result = await dispatch(signIn(formData));
 
-        toast.success(response.message || "Signed in successfully");
-        navigate("/userDashboard");
-      } else {
-        toast.error(response?.message || "Failed to sign in");
+    if (signIn.fulfilled.match(result)) {
+      const { success, data, message } = result.payload;
+
+      if (success) {
+        if (data.accessToken)
+          localStorage.setItem("accessToken", data.accessToken);
+        const token  = data.accessToken;
+        const decoded= jwtDecode(token) as tokenPayload;
+        const userName = decoded.name
+      
+      switch(decoded.role ) {
+        case "USER":
+          navigate("/events");
+          break;
+        case "ADMIN":
+          navigate("/admin/dashboard");
+          break;
+        case "ORGANIZER":
+          navigate("/organizer/dashboard");
+          break;
+        case "STAFF":
+          navigate("/staff/dashboard");
+          break;
+        default:
+          navigate("/");
       }
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast.error(error?.message || "An error occurred during sign in");
+
+        toast.success(`Welcome, ${userName}` );
+      } else {
+        toast.error(message || "Failed to sign in");
+      }
+    } else {
+      // ERROR CASE
+      const errorPayload = result.payload as ErrorResponse | undefined;
+      const errorMessage =
+        errorPayload?.message || "An error occurred during sign in";
+      toast.error(errorMessage);
     }
   };
 
-const handleGoogleSignIn = async () => {
-  try {
-    console.log("🟡 1. Starting Google sign in...");
-    const response = await googleSignIn();
-    console.log("🟢 2. Google sign in response:", response);
-    
-    if (response && response.success) {
-      console.log("Redirect URL:", response.redirectUrl);
-      
-      // ✅ Show toast first
-      toast.success("Redirecting to Google...");
-      
-      // ✅ Redirect after a short delay to show the toast
-      setTimeout(() => {
-        window.location.replace(response.redirectUrl);
-      }, 1000);
-      
-    } else {
-      console.log("🔴 3. Google sign in failed:", response);
-      toast.error(response?.message || "Failed to sign in");
-    }
-  } catch (error: any) {
-    console.error("Sign in error:", error);
-    toast.error(error?.message || "An error occurred during sign in");
-  }
-};
+  const handleGoogleSignIn = async () => {
+    try {
+      const response = await googleSignIn();
 
-  const handleFacebookSignIn = () => {
-    console.log("Sign in with Facebook");
-    // Handle Facebook OAuth here
+      if (response && response.success) {
+        toast.success("Redirecting to Google...");
+
+        setTimeout(() => {
+          window.location.replace(response.redirectUrl);
+        }, 1000);
+      } else {
+        toast.error(response?.message || "Failed to sign in");
+      }
+    } catch (error: unknown) {
+      toast.error(
+        (error as Error | undefined)?.message ||
+          "An error occurred during sign in"
+      );
+    }
   };
 
   const handleForgotPassword = () => {
     console.log("Forgot password clicked");
     // Handle forgot password logic here
   };
+
+  // ✅ Agar loading ho to spinner show karo, BUT COMPLETE PAGE NAHI
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Signing you in..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -103,6 +131,13 @@ const handleGoogleSignIn = async () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* ✅ ERROR MESSAGE - Agar error hai to show karo */}
+          {error && (
+            <div className="mb-6">
+              <ErrorMessage message={error} type="error" />
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
@@ -181,9 +216,10 @@ const handleGoogleSignIn = async () => {
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={loading} // ✅ Loading state disable the button
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                Sign in
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
@@ -202,9 +238,8 @@ const handleGoogleSignIn = async () => {
             </div>
 
             {/* Social SignIn Buttons */}
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-1 gap-3">
               {/* Google SignIn */}
-
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
@@ -228,22 +263,7 @@ const handleGoogleSignIn = async () => {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span className="ml-2">Google</span>
-              </button>
-              {/* Facebook SignIn */}
-              <button
-                type="button"
-                onClick={handleFacebookSignIn}
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors duration-200"
-              >
-                <svg
-                  className="w-5 h-5 text-blue-600"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-                <span className="ml-2">Facebook</span>
+                <span className="ml-2">SignIn with Google</span>
               </button>
             </div>
           </div>
