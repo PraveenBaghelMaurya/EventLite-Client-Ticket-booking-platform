@@ -9,7 +9,7 @@ export interface SignupForm {
   email: string;
   phone: string;
   password: string;
-  role?: 'USER' | 'ADMIN';
+  role?: 'USER' | 'ADMIN' | 'ORGANIZER';
   avatar?: string;
 }
 
@@ -18,14 +18,23 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'USER' | 'ADMIN';
+  role: 'USER' | 'ADMIN' | 'ORGANIZER';
   avatar?: string;
   createdAt: string;
   updatedAt: string;
+  isLoggedIn: boolean;
 }
 
 export interface AuthResponse {
   user: User;
   token?: string;
   message?: string;
+}
+
+export interface tokenPayload{
+  id:number;
+  name:string;
+  email:string;
+  role:'ADMIN'|'ORGANIZER'|'STAFF'|'USER';
+
 }

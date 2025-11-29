@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-// import counterReducer from '../features/counter/counterSlice';
+import { SignInSlice } from './feature/signInSlice'
+import { eventSlice } from './feature/eventSlice'
 
 export const store = configureStore({
   reducer: {
-    // counter: counterReducer,
+    signIn: SignInSlice.reducer,
+    event: eventSlice.reducer,
   },
 });
 
